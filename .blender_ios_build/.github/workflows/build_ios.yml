@@ -42,7 +42,7 @@ jobs:
                      -exportPath build_ios/ipa
 
       - name: Upload IPA
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: blender-ios-ipa
           path: build_ios/ipa
