@@ -1,0 +1,47 @@
+name: Build Blender iOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          brew install git-lfs cmake python
+
+      - name: Initialize Git LFS
+        run: git lfs install
+
+      - name: Pull Blender repo
+        run: git lfs pull
+
+      - name: Build Blender for iOS
+        run: |
+          ./build_files/utils/make_update.py --use-ios-libraries
+          cmake -B build_ios -DCMAKE_TOOLCHAIN_FILE=build_files/cmake/toolchains/iOS.cmake
+          cmake --build build_ios --config Release
+
+      - name: Package .ipa
+        run: |
+          # replace with actual packaging commands using xcodebuild
+          xcodebuild -workspace build_ios/Blender.xcworkspace \
+                     -scheme Blender \
+                     -configuration Release \
+                     -sdk iphoneos \
+                     -archivePath build_ios/Blender.xcarchive archive
+          xcodebuild -exportArchive \
+                     -archivePath build_ios/Blender.xcarchive \
+                     -exportOptionsPlist build_files/utils/iOSExportOptions.plist \
+                     -exportPath build_ios/ipa
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v3
+        with:
+          name: blender-ios-ipa
+          path: build_ios/ipa
